@@ -83,7 +83,9 @@ else:
 early_stop = EarlyStopping(monitor='val_loss', mode='min', 
                            verbose=1, patience=10, min_delta=0.0001)
 
-checkpoint = ModelCheckpoint('checkpoints/best_demo.hdf5', monitor='val_acc', 
+metric = 'val_accuracy'
+
+checkpoint = ModelCheckpoint('checkpoints/best_demo.hdf5', monitor=metric, 
                              verbose=1, save_best_only=True, mode='max')
 
 
