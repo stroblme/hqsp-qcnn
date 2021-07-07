@@ -17,7 +17,7 @@ from helper_q_tool import gen_qspeech, plot_acc_loss, show_speech
 import argparse
 os.environ["CUDA_VISIBLE_DEVICES"]="1"
 import time as ti
-data_ix = ti.strftime("%m%d_%H%M")
+data_ix = ti.strftime("%Y%m%d_%H%M")
 
 labels = [
     'left', 'go', 'yes', 'down', 'up', 'on', 'right', 'no', 'off', 'stop',
