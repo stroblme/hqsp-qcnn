@@ -2,3 +2,4 @@ venv
 *.cpython
 __pycache__
 *.hdf5
+*.png
