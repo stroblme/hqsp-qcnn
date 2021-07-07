@@ -34,6 +34,13 @@ conda install -c conda-forge librosa
 pip install pennylane --upgrade 
 ```
 
+- option 1.1: install from pip only
+```bash
+pip install -r requirements.txt
+```
+
+
+
 - option 2: from environment.yml (for 2080 Ti with CUDA 10.0) 
 ```python
 conda env create -f environment.yml
