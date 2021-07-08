@@ -38,7 +38,9 @@ args = parser.parse_args()
 
 def gen_train(labels, train_audio_path, sr, port):
     all_wave, all_label = gen_mel(labels, train_audio_path, sr, port)
-
+    return gen_train_from_wave(all_wave=all_wave, all_label=all_label)
+    
+def gen_train_from_wave(all_wave, all_label):
     label_enconder = LabelEncoder()
     y = label_enconder.fit_transform(all_label)
     classes = list(label_enconder.classes_)
