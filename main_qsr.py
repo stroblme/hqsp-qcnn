@@ -1,15 +1,16 @@
 import os
-import librosa
-import librosa.display
-import matplotlib.pyplot as plt
+# import librosa
+# import librosa.display
+# import matplotlib.pyplot as plt
 from pennylane import numpy as np
-from scipy.io import wavfile
-import warnings
-import tensorflow as tf
+# from scipy.io import wavfile
+# import warnings
+# import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 from tensorflow import keras
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.optimizers import RMSprop, SGD
+# from tensorflow.keras.optimizers import RMSprop, SGD
+from tensorflow.keras.utils import plot_model
 ## Local Definition 
 from data_generator import gen_mel
 from models import cnn_Model, dense_Model, attrnn_Model
@@ -97,6 +98,7 @@ elif args.net == 1:
     model = attrnn_Model(q_train[0], labels)
 
 model.summary()
+plot_model(model, to_file='model.png')
 
 history = model.fit(
     x=q_train, 
