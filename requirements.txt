@@ -60,7 +60,6 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pybind11==2.6.2
 pycparser==2.20
-pydot==1.4.2
 pyparsing==2.4.7
 pyrsistent==0.18.0
 python-constraint==1.4.0
@@ -88,6 +87,8 @@ sympy==1.8
 tensorboard==2.5.0
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.0
+tensorflow-estimator==2.5.0
+tensorflow-gpu==2.5.0
 termcolor==1.1.0
 threadpoolctl==2.1.0
 toml==0.10.2
