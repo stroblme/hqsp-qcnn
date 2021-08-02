@@ -41,7 +41,7 @@ def gen_train(labels, train_audio_path, sr, port):
     all_wave, all_label = gen_mel(labels, train_audio_path, sr, port)
     return gen_train_from_wave(all_wave=all_wave, all_label=all_label)
     
-def gen_train_from_wave(all_wave, all_label):
+def gen_train_from_wave(all_wave, all_label, output=SAVE_PATH):
     label_enconder = LabelEncoder()
     y = label_enconder.fit_transform(all_label)
     classes = list(label_enconder.classes_)
@@ -50,10 +50,10 @@ def gen_train_from_wave(all_wave, all_label):
     from sklearn.model_selection import train_test_split
     x_train, x_valid, y_train, y_valid = train_test_split(np.array(all_wave),np.array(y),stratify=y,test_size = 0.2,random_state=777,shuffle=True)
     h_feat, w_feat, _ = x_train[0].shape
-    np.save(SAVE_PATH + "n_x_train_speech.npy", x_train)
-    np.save(SAVE_PATH + "n_x_test_speech.npy", x_valid)
-    np.save(SAVE_PATH + "n_y_train_speech.npy", y_train)
-    np.save(SAVE_PATH + "n_y_test_speech.npy", y_valid)
+    np.save(output + "n_x_train_speech.npy", x_train)
+    np.save(output + "n_x_test_speech.npy", x_valid)
+    np.save(output + "n_y_train_speech.npy", y_train)
+    np.save(output + "n_y_test_speech.npy", y_valid)
     print("===== Shape", h_feat, w_feat)
 
     return x_train, x_valid, y_train, y_valid
@@ -67,49 +67,50 @@ def gen_quanv(x_train, x_valid, kr):
 
     return q_train, q_valid
 
-if args.mel == 1:
-    x_train, x_valid, y_train, y_valid = gen_train(labels, train_audio_path, args.sr, args.port) 
-else:
-    x_train = np.load(SAVE_PATH + "x_train_demo.npy")
-    x_valid = np.load(SAVE_PATH + "x_test_demo.npy")
-    y_train = np.load(SAVE_PATH + "y_train_demo.npy")
-    y_valid = np.load(SAVE_PATH + "y_test_demo.npy")
+if __name__ == "__main__":
+    if args.mel == 1:
+        x_train, x_valid, y_train, y_valid = gen_train(labels, train_audio_path, args.sr, args.port) 
+    else:
+        x_train = np.load(SAVE_PATH + "x_train_demo.npy")
+        x_valid = np.load(SAVE_PATH + "x_test_demo.npy")
+        y_train = np.load(SAVE_PATH + "y_train_demo.npy")
+        y_valid = np.load(SAVE_PATH + "y_test_demo.npy")
 
 
-if args.quanv == 1:
-    q_train, q_valid = gen_quanv(x_train, x_valid, 2) 
-else:
-    q_train = np.load(SAVE_PATH + "q_train_demo.npy")
-    q_valid = np.load(SAVE_PATH + "q_test_demo.npy")
+    if args.quanv == 1:
+        q_train, q_valid = gen_quanv(x_train, x_valid, 2) 
+    else:
+        q_train = np.load(SAVE_PATH + "q_train_demo.npy")
+        q_valid = np.load(SAVE_PATH + "q_test_demo.npy")
 
-## For Quanv Exp.
-early_stop = EarlyStopping(monitor='val_loss', mode='min', 
-                           verbose=1, patience=10, min_delta=0.0001)
+    ## For Quanv Exp.
+    early_stop = EarlyStopping(monitor='val_loss', mode='min', 
+                            verbose=1, patience=10, min_delta=0.0001)
 
-metric = 'val_accuracy'
+    metric = 'val_accuracy'
 
-checkpoint = ModelCheckpoint('checkpoints/best_demo.hdf5', monitor=metric, 
-                             verbose=1, save_best_only=True, mode='max')
-
-
-if args.net == 0:
-    model = dense_Model(x_train[0], labels)
-elif args.net == 1:
-    model = attrnn_Model(q_train[0], labels)
-
-model.summary()
-plot_model(model, to_file='model.png')
-
-history = model.fit(
-    x=q_train, 
-    y=y_train,
-    epochs=args.eps, 
-    callbacks=[checkpoint], 
-    batch_size=args.bsize, 
-    validation_data=(q_valid,y_valid)
-)
+    checkpoint = ModelCheckpoint('checkpoints/best_demo.hdf5', monitor=metric, 
+                                verbose=1, save_best_only=True, mode='max')
 
 
-model.save('checkpoints/'+ data_ix + '_demo.hdf5')
+    if args.net == 0:
+        model = dense_Model(x_train[0], labels)
+    elif args.net == 1:
+        model = attrnn_Model(q_train[0], labels)
 
-print("=== Batch Size: ", args.bsize)
+    model.summary()
+    plot_model(model, to_file='model.png')
+
+    history = model.fit(
+        x=q_train, 
+        y=y_train,
+        epochs=args.eps, 
+        callbacks=[checkpoint], 
+        batch_size=args.bsize, 
+        validation_data=(q_valid,y_valid)
+    )
+
+
+    model.save('checkpoints/'+ data_ix + '_demo.hdf5')
+
+    print("=== Batch Size: ", args.bsize)
