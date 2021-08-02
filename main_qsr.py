@@ -50,10 +50,10 @@ def gen_train_from_wave(all_wave, all_label, output=SAVE_PATH):
     from sklearn.model_selection import train_test_split
     x_train, x_valid, y_train, y_valid = train_test_split(np.array(all_wave),np.array(y),stratify=y,test_size = 0.2,random_state=777,shuffle=True)
     h_feat, w_feat, _ = x_train[0].shape
-    np.save(output + "n_x_train_speech.npy", x_train)
-    np.save(output + "n_x_test_speech.npy", x_valid)
-    np.save(output + "n_y_train_speech.npy", y_train)
-    np.save(output + "n_y_test_speech.npy", y_valid)
+    np.save(output + "x_train_speech.npy", x_train)
+    np.save(output + "x_test_speech.npy", x_valid)
+    np.save(output + "y_train_speech.npy", y_train)
+    np.save(output + "y_test_speech.npy", y_valid)
     print("===== Shape", h_feat, w_feat)
 
     return x_train, x_valid, y_train, y_valid
