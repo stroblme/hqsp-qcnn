@@ -24,7 +24,7 @@ labels = [
     'left', 'go', 'yes', 'down', 'up', 'on', 'right', 'no', 'off', 'stop',
 ]
 
-train_audio_path = '../dataset/'
+train_audio_path = "/ceph/mstrobl/dataset/"
 SAVE_PATH = "data_quantum/" # Data saving folder
 
 parser = argparse.ArgumentParser()
