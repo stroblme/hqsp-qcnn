@@ -25,7 +25,7 @@ labels = [
 ]
 
 train_audio_path = "/ceph/mstrobl/dataset/"
-SAVE_PATH = "data_quantum/" # Data saving folder
+SAVE_PATH = "/ceph/mstrobl/data_quantum/" # Data saving folder
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--eps", type = int, default = 30, help = "Epochs") 
