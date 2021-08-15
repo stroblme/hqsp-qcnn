@@ -1,11 +1,7 @@
 import os
 import librosa
-import matplotlib.pyplot as plt
 import numpy as np
-from scipy.io import wavfile
 from tqdm import tqdm
-import warnings
-import tensorflow as tf
 
 
 train_audio_path = '../dataset/'

@@ -123,6 +123,72 @@ def attrnn_Model(x_in, labels, ablation = False):
 
     return model
 
+def custom_attrnn_Model(x_in, labels, ablation = False):
+    # simple LSTM
+    rnn_func = L.LSTM
+    
+    if len(x_in.shape) >= 3:
+        h_feat,w_feat,ch_size = x_in.shape
+        inputs = keras.layers.Input(shape=(h_feat, w_feat, ch_size))
+    else:
+        h_feat, w_feat = x_in.shape
+        inputs = keras.layers.Input(shape=(h_feat, w_feat))
+
+    inputs = L.Input(shape=(h_feat, w_feat, ch_size))
+
+    if ablation == True:
+        x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(inputs)
+        x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
+    else:
+        x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(inputs)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = L.Permute((2, 1, 3))(x)
+
+    x = L.Conv2D(16, (5, 1), activation='relu', padding='same')(x)
+    up = L.BatchNormalization()(x)
+    x = L.Conv2D(32, (5, 1), activation='relu', padding='same')(up)
+    x = L.BatchNormalization()(x)
+    x = L.Conv2D(16, (5, 1), activation='relu', padding='same')(x)
+    down = L.BatchNormalization()(x)
+    merge = L.Concatenate(axis=3)([up,down])
+    x = L.Conv2D(1, (5, 1), activation='relu', padding='same')(merge)
+    x = L.BatchNormalization()(x)
+
+
+    x = L.Lambda(lambda q: K.squeeze(q, -1), name='squeeze_last_dim')(x)
+
+    x = L.Bidirectional(rnn_func(64, return_sequences=True)
+                        )(x)  # [b_s, seq_len, vec_dim]
+    x = L.Bidirectional(rnn_func(64, return_sequences=True)
+                        )(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = L.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = L.Dense(128)(xFirst)
+
+    # dot product attention
+    attScores = L.Dot(axes=[1, 2])([query, x])
+    attScores = L.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = L.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = L.Dense(64, activation='relu')(attVector)
+    x = L.Dense(32)(x)
+
+    output = L.Dense(len(labels), activation='softmax', name='output')(x)
+
+    model = Model(inputs=inputs, outputs=output)
+    model.compile(
+        optimizer=SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5),
+        loss="categorical_crossentropy",
+        metrics=["accuracy"],
+    )
+
+    return model
+
 class CTCLayer(L.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)

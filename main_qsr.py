@@ -58,12 +58,12 @@ def gen_train_from_wave(all_wave, all_label, output=SAVE_PATH):
 
     return x_train, x_valid, y_train, y_valid
 
-def gen_quanv(x_train, x_valid, kr):
+def gen_quanv(x_train, x_valid, kr, saveTo=SAVE_PATH):
     print("Kernal = ", kr)
     q_train, q_valid = gen_qspeech(x_train, x_valid, kr)
 
-    np.save(SAVE_PATH + "demo_t1.npy", q_train)
-    np.save(SAVE_PATH + "demo_t2.npy", q_valid)
+    np.save(saveTo + "quanv_train.npy", q_train)
+    np.save(saveTo + "quanv_test.npy", q_valid)
 
     return q_train, q_valid
 
