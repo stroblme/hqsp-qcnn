@@ -45,7 +45,7 @@ def gen_train_from_wave(all_wave, all_label, output=SAVE_PATH):
     label_enconder = LabelEncoder()
     y = label_enconder.fit_transform(all_label)
     classes = list(label_enconder.classes_)
-    y = keras.utils.to_categorical(y, num_classes=len(all_label))
+    y = keras.utils.to_categorical(y, num_classes=len(labels))
 
     from sklearn.model_selection import train_test_split
     x_train, x_valid, y_train, y_valid = train_test_split(np.array(all_wave),np.array(y),stratify=y,test_size = 0.2,random_state=777,shuffle=True)
