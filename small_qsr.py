@@ -38,11 +38,3 @@ def gen_train_from_wave(all_wave, all_label, output):
 
     return x_train, x_valid, y_train, y_valid
 
-def gen_quanv(x_train, x_valid, kr, output):
-    print("Kernal = ", kr)
-    q_train, q_valid = gen_qspeech(x_train, x_valid, kr)
-
-    np.save(output + "quanv_train.npy", q_train)
-    np.save(output + "quanv_test.npy", q_valid)
-
-    return q_train, q_valid
