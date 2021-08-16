@@ -2,6 +2,8 @@ import pennylane as qml
 import numpy as np
 from pennylane.templates import RandomLayers
 
+import multiprocessing
+from multiprocessing import Pool
 n_w = 4 # numbers of wires def 4
 noise_mode = False # for running at QPU
 
@@ -14,6 +16,9 @@ n_layers = 1
 
 # Random circuit parameters
 rand_params = np.random.uniform(high= 2 * np.pi, size=(n_layers, n_w)) # def 2, n_w = 4
+
+PoolSize = int(multiprocessing.cpu_count()*0.6) #be gentle..
+kr = 2
 
 @qml.qnode(dev)
 def circuit(phi=None):
@@ -46,28 +51,39 @@ def quanv(image, kr=2):
                 out[j // kr, k // kr, c] = q_results[c]
     return out
 
+def poolQuanv(img):
+    return quanv(img, kr)
+
+def gen_qspeech(x_train, x_valid, kr_lc): # kernal size = 2x2 or 3x3
+    global kr
+    kr = kr_lc
+    q_train = list()
+    temp_q = list()
+    print("Quantum pre-processing of train Speech:")
+    
+    with Pool(PoolSize) as p:
+        q_train = p.map(poolQuanv, x_train)
+        
+    q_train = np.asarray(q_train)
+
+    if x_valid == None:
+        return q_train
+        
+    q_valid = list()
+    print("\nQuantum pre-processing of test Speech:")
+
+    with Pool(PoolSize) as p:
+        q_valid = p.map(poolQuanv, x_valid)
+
+    q_valid = np.asarray(q_valid)
+    
+    return q_train, q_valid
+
 def gen_quanv(x_train, x_valid, kr, output):
     print("Kernal = ", kr)
     q_train, q_valid = gen_qspeech(x_train, x_valid, kr)
 
-    np.save(output + "quanv_train.npy", q_train)
-    np.save(output + "quanv_test.npy", q_valid)
+    np.save(f"{output}/quanv_train.npy", q_train)
+    np.save(f"{output}/quanv_test.npy", q_valid)
 
-    return q_train, q_valid
-
-def gen_qspeech(x_train, x_valid, kr): # kernal size = 2x2 or 3x3
-    q_train = []
-    print("Quantum pre-processing of train Speech:")
-    for idx, img in enumerate(x_train):
-        print("{}/{}        ".format(idx + 1, len(x_train)), end="\r")
-        q_train.append(quanv(img, kr))
-    q_train = np.asarray(q_train)
-
-    q_valid = []
-    print("\nQuantum pre-processing of test Speech:")
-    for idx, img in enumerate(x_valid):
-        print("{}/{}        ".format(idx + 1, len(x_valid)), end="\r")
-        q_valid.append(quanv(img, kr))
-    q_valid = np.asarray(q_valid)
-    
     return q_train, q_valid
