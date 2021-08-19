@@ -66,7 +66,7 @@ def gen_qspeech(x_train, x_valid, kr_lc): # kernal size = 2x2 or 3x3
         
     q_train = np.asarray(q_train)
 
-    if x_valid == None:
+    if x_valid == []:
         return q_train
         
     q_valid = list()
