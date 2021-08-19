@@ -2,7 +2,8 @@ import os
 
 ## Local Definition 
 from data_generator import gen_mel
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["LD_LIBRARY_PATH"] = "$LD_LIBRARY_PATH:/usr/local/cuda/lib64/:/usr/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda-11.2/lib64:/usr/local/cuda/targets/x86_64-linux/lib/"
+
 import time as ti
 data_ix = ti.strftime("%Y%m%d_%H%M")
 
