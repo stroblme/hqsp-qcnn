@@ -70,7 +70,7 @@ def gen_qspeech(x_train, x_valid, kr_lc): # kernal size = 2x2 or 3x3
         return q_train
         
     q_valid = list()
-    print("\nQuantum pre-processing of test Speech:")
+    print("\nQuantum pre-processing of valid Speech:")
 
     with Pool(PoolSize) as p:
         q_valid = p.map(poolQuanv, x_valid)
@@ -84,6 +84,6 @@ def gen_quanv(x_train, x_valid, kr, output):
     q_train, q_valid = gen_qspeech(x_train, x_valid, kr)
 
     np.save(f"{output}/quanv_train.npy", q_train)
-    np.save(f"{output}/quanv_test.npy", q_valid)
+    np.save(f"{output}/quanv_valid.npy", q_valid)
 
     return q_train, q_valid
