@@ -18,9 +18,7 @@ n_layers = 1
 # Random circuit parameters
 rand_params = np.random.uniform(high= 2 * np.pi, size=(n_layers, n_w)) # def 2, n_w = 4
 
-PoolSize = int(multiprocessing.cpu_count()*0.6) #be gentle..
-PoolSize = 1
-kr = 2
+kernelSize = 2
 
 @qml.qnode(dev)
 def circuit(phi=None):
@@ -54,16 +52,16 @@ def quanv(image, kr=2):
     return out
 
 def poolQuanv(img):
-    return quanv(img, kr)
+    return quanv(img, kernelSize)
 
-def gen_qspeech(x_train, x_valid, kr_lc): # kernal size = 2x2 or 3x3
-    global kr
-    kr = kr_lc
+def gen_qspeech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
+    global kernelSize
+    kernelSize = kr
     q_train = list()
     temp_q = list()
     print("Quantum pre-processing of train Speech:")
     
-    with Pool(PoolSize) as p:
+    with Pool(poolSize) as p:
         q_train = p.map(poolQuanv, x_train)
         
     q_train = np.asarray(q_train)
@@ -74,16 +72,16 @@ def gen_qspeech(x_train, x_valid, kr_lc): # kernal size = 2x2 or 3x3
     q_valid = list()
     print("\nQuantum pre-processing of valid Speech:")
 
-    with Pool(PoolSize) as p:
+    with Pool(poolSize) as p:
         q_valid = p.map(poolQuanv, x_valid)
 
     q_valid = np.asarray(q_valid)
     
     return q_train, q_valid
 
-def gen_quanv(x_train, x_valid, kr, output):
+def gen_quanv(x_train, x_valid, kr, output, poolSize=1):
     print("Kernal = ", kr)
-    q_train, q_valid = gen_qspeech(x_train, x_valid, kr)
+    q_train, q_valid = gen_qspeech(x_train, x_valid, kr, poolSize)
 
     np.save(f"{output}/quanv_train.npy", q_train)
     np.save(f"{output}/quanv_valid.npy", q_valid)
