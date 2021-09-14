@@ -7,8 +7,10 @@ os.environ["LD_LIBRARY_PATH"] = "$LD_LIBRARY_PATH:/usr/local/cuda/lib64/:/usr/li
 import time as ti
 data_ix = ti.strftime("%Y%m%d_%H%M")
 
+# This is the global definition which labels to use
 labels = [
-    'left', 'go', 'yes', 'down', 'up', 'on', 'right', 'no', 'off', 'stop',
+    # 'left', 'go', 'yes', 'down', 'up', 'on', 'right', 'no', 'off', 'stop'
+    'left', 'go'
 ]
 
 train_audio_path = "/ceph/mstrobl/dataset/"
