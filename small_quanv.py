@@ -4,7 +4,11 @@ from pennylane.templates import RandomLayers
 
 import multiprocessing
 # from multiprocessing import Pool
-from multiprocessing.dummy import Pool
+from multiprocessing import Pool
+
+
+#TODO: investigate in those hyperparameters
+n_layers = 1
 n_w = 4 # numbers of wires def 4
 noise_mode = False # for running at QPU
 
@@ -13,12 +17,12 @@ if  noise_mode == True:
 else:
     dev = qml.device("default.qubit", wires= n_w)
 
-n_layers = 1
 
+#TODO: maybe move that to the corresponding fct?
 # Random circuit parameters
 rand_params = np.random.uniform(high= 2 * np.pi, size=(n_layers, n_w)) # def 2, n_w = 4
 
-kernelSize = 2
+kernelSize = 2 # will be overwritten in gen_qspeech
 
 @qml.qnode(dev)
 def circuit(phi=None):
@@ -36,7 +40,7 @@ def quanv(image, kr=2):
     h_feat, w_feat, ch_n = image.shape
     """Convolves the input speech with many applications of the same quantum circuit."""
     out = np.zeros((h_feat//kr, w_feat//kr, n_w))
-
+    print(f"{image.min()}, {image.max()}")
     # Loop over the coordinates of the top-left pixel of 2X2 squares
     for j in range(0, h_feat, kr):
         for k in range(0, w_feat, kr):
@@ -56,17 +60,22 @@ def poolQuanv(img):
 
 def gen_qspeech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
     global kernelSize
-    kernelSize = kr
+    kernelSize = kr # moving the local variable to global here for pool processing
+
     q_train = list()
     temp_q = list()
     print("Quantum pre-processing of train Speech:")
     
+    x_train = x_train * (1/x_train.max())
+    x_valid = x_valid * (1/x_valid.max())
+
     with Pool(poolSize) as p:
         q_train = p.map(poolQuanv, x_train)
         
     q_train = np.asarray(q_train)
 
     if x_valid == []:
+        print("Validation array is empty! Ensure that we are running test sets!")
         return q_train
         
     q_valid = list()
