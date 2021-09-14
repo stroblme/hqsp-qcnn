@@ -3,7 +3,8 @@ import numpy as np
 from pennylane.templates import RandomLayers
 
 import multiprocessing
-from multiprocessing import Pool
+# from multiprocessing import Pool
+from multiprocessing.dummy import Pool
 n_w = 4 # numbers of wires def 4
 noise_mode = False # for running at QPU
 
@@ -18,6 +19,7 @@ n_layers = 1
 rand_params = np.random.uniform(high= 2 * np.pi, size=(n_layers, n_w)) # def 2, n_w = 4
 
 PoolSize = int(multiprocessing.cpu_count()*0.6) #be gentle..
+PoolSize = 1
 kr = 2
 
 @qml.qnode(dev)
