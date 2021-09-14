@@ -9,8 +9,8 @@ data_ix = ti.strftime("%Y%m%d_%H%M")
 
 # This is the global definition which labels to use
 labels = [
-    # 'left', 'go', 'yes', 'down', 'up', 'on', 'right', 'no', 'off', 'stop'
-    'left', 'go'
+    'left', 'go', 'yes', 'down', 'up', 'on', 'right', 'no', 'off', 'stop'
+    # 'left', 'go'
 ]
 
 train_audio_path = "/ceph/mstrobl/dataset/"
@@ -33,10 +33,10 @@ def gen_train_from_wave(all_wave, all_label, output):
 
     x_train, x_valid, y_train, y_valid = train_test_split(np.array(all_wave),np.array(y),stratify=y,test_size = 0.2,random_state=777,shuffle=True)
     h_feat, w_feat, _ = x_train[0].shape
-    np.save(output + "x_train_speech.npy", x_train)
-    np.save(output + "x_test_speech.npy", x_valid)
-    np.save(output + "y_train_speech.npy", y_train)
-    np.save(output + "y_test_speech.npy", y_valid)
+    np.save(output + "/x_train_speech.npy", x_train)
+    np.save(output + "/x_valid_speech.npy", x_valid)
+    np.save(output + "/y_train_speech.npy", y_train)
+    np.save(output + "/y_valid_speech.npy", y_valid)
     print("===== Shape", h_feat, w_feat)
 
     return x_train, x_valid, y_train, y_valid
