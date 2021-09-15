@@ -67,7 +67,6 @@ def gen_qspeech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
     print("Quantum pre-processing of train Speech:")
     
     x_train = x_train * (1/x_train.max())
-    x_valid = x_valid * (1/x_valid.max())
 
     with Pool(poolSize) as p:
         q_train = p.map(poolQuanv, x_train)
@@ -80,6 +79,8 @@ def gen_qspeech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
         
     q_valid = list()
     print("\nQuantum pre-processing of valid Speech:")
+    
+    x_valid = x_valid * (1/x_valid.max())
 
     with Pool(poolSize) as p:
         q_valid = p.map(poolQuanv, x_valid)
