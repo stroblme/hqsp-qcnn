@@ -40,7 +40,7 @@ def quanv(image, kr=2):
     h_feat, w_feat, ch_n = image.shape
     """Convolves the input speech with many applications of the same quantum circuit."""
     out = np.zeros((h_feat//kr, w_feat//kr, n_w))
-    print(f"{image.min()}, {image.max()}")
+    # print(f"{image.min()}, {image.dfamax()}")
     # Loop over the coordinates of the top-left pixel of 2X2 squares
     for j in range(0, h_feat, kr):
         for k in range(0, w_feat, kr):
