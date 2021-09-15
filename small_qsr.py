@@ -13,8 +13,6 @@ labels = [
     # 'left', 'go'
 ]
 
-train_audio_path = "/ceph/mstrobl/dataset/"
-
 def gen_train(labels, train_audio_path, sr, port):
     all_wave, all_label = gen_mel(labels, train_audio_path, sr, port)
     return gen_train_from_wave(all_wave=all_wave, all_label=all_label)
