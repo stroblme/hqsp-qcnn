@@ -24,8 +24,8 @@ labels = [
     'left', 'go', 'yes', 'down', 'up', 'on', 'right', 'no', 'off', 'stop',
 ]
 
-train_audio_path = "/ceph/mstrobl/dataset/"
-SAVE_PATH = "/ceph/mstrobl/orig/data_quantum/" # Data saving folder
+train_audio_path = "/storage/mstrobl/dataset/"
+SAVE_PATH = "/storage/mstrobl/orig/data_quantum/" # Data saving folder
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--eps", type = int, default = 30, help = "Epochs") 
@@ -67,15 +67,23 @@ def gen_quanv(x_train, x_valid, kr, saveTo=SAVE_PATH):
 
     return q_train, q_valid
 
+import sys
+sys.path.append("./../")
+sys.path.append("./../stqft")
+from stqft.frontend import export
+
 if __name__ == "__main__":
     if args.mel == 1:
         x_train, x_valid, y_train, y_valid = gen_train(labels, train_audio_path, args.sr, args.port) 
     else:
-        x_train = np.load(SAVE_PATH + "x_train_demo.npy")
-        x_valid = np.load(SAVE_PATH + "x_test_demo.npy")
-        y_train = np.load(SAVE_PATH + "y_train_demo.npy")
-        y_valid = np.load(SAVE_PATH + "y_test_demo.npy")
+        x_train = np.load(SAVE_PATH + "y_train_speech.npy")
+        x_valid = np.load(SAVE_PATH + "x_test_speech.npy")
+        y_train = np.load(SAVE_PATH + "y_train_speech.npy")
+        y_valid = np.load(SAVE_PATH + "y_test_speech.npy")
 
+    
+
+    # from small_quanv import gen_quanv
 
     if args.quanv == 1:
         q_train, q_valid = gen_quanv(x_train, x_valid, 2) 
@@ -111,6 +119,11 @@ if __name__ == "__main__":
     )
 
 
+    exportPath = "/storage/mstrobl/versioning"
+
     model.save('checkpoints/'+ data_ix + '_demo.hdf5')
+    exp = export(topic="main_qsr", identifier="model", dataDir=exportPath)
+    exp.setData(export.GENERICDATA, {"history_acc":history.history['accuracy'], "history_val_acc":history.history['val_accuracy'], "history_loss":history.history['loss'], "history_val_loss":history.history['val_loss']})
+    exp.doExport()
 
     print("=== Batch Size: ", args.bsize)
