@@ -124,6 +124,7 @@ if __name__ == "__main__":
     model.save('checkpoints/'+ data_ix + '_demo.hdf5')
     exp = export(topic="main_qsr", identifier="model", dataDir=exportPath)
     exp.setData(export.GENERICDATA, {"history_acc":history.history['accuracy'], "history_val_acc":history.history['val_accuracy'], "history_loss":history.history['loss'], "history_val_loss":history.history['val_loss']})
+    exp.setData(export.DESCRIPTION, f"Model History")
     exp.doExport()
 
     print("=== Batch Size: ", args.bsize)
