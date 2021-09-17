@@ -75,7 +75,7 @@ def gen_qspeech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
 
     if x_valid == []:
         print("Validation array is empty! Ensure that we are running test sets!")
-        return q_train, None
+        return q_train, []
         
     q_valid = list()
     print("\nQuantum pre-processing of valid Speech:")
@@ -95,7 +95,7 @@ def gen_quanv(x_train, x_valid, kr, output, poolSize=1):
 
     np.save(f"{output}/quanv_train.npy", q_train)
 
-    if q_valid != None:
+    if q_valid != []:
         np.save(f"{output}/quanv_valid.npy", q_valid)
 
     return q_train, q_valid
