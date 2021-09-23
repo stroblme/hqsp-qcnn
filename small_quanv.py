@@ -55,8 +55,31 @@ def quanv(image, kr=2):
                 out[j // kr, k // kr, c] = q_results[c]
     return out
 
+def noQuanv(image, kr=2):
+    h_feat, w_feat, ch_n = image.shape
+    """Convolves the input speech with many applications of the same quantum circuit."""
+    out = np.zeros((h_feat//kr, w_feat//kr, n_w))
+    # print(f"{image.min()}, {image.dfamax()}")
+    # Loop over the coordinates of the top-left pixel of 2X2 squares
+    for j in range(0, h_feat, kr):
+        for k in range(0, w_feat, kr):
+            # Process a squared 2x2 region of the image with a quantum circuit
+            # q_results = circuit(
+            #     # kernal 3 ## phi=[image[j, k, 0], image[j, k + 1, 0], image[j, k + 2, 0], image[j + 1, k, 0], 
+            #     # image[j + 1, k + 1, 0], image[j + 1, k +2 , 0],image[j+2, k, 0], image[j+2, k+1, 0], image[j+2, k+2, 0]]
+            #     phi=[image[j, k, 0], image[j, k + 1, 0], image[j + 1, k, 0], image[j + 1, k + 1, 0]]
+            # )
+            q_results = [image[j, k, 0], image[j, k + 1, 0], image[j + 1, k, 0], image[j + 1, k + 1, 0]]
+            # Assign expectation values to different channels of the output pixel (j/2, k/2)
+            for c in range(n_w):
+                out[j // kr, k // kr, c] = q_results[c]
+    return out
+
 def poolQuanv(img):
     return quanv(img, kernelSize)
+    
+def poolNoQuanv(img):
+    return noQuanv(img, kernelSize)
 
 def gen_qspeech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
     global kernelSize
@@ -89,9 +112,44 @@ def gen_qspeech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
     
     return q_train, q_valid
 
-def gen_quanv(x_train, x_valid, kr, output, poolSize=1):
+def gen_speech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
+    global kernelSize
+    kernelSize = kr # moving the local variable to global here for pool processing
+
+    q_train = list()
+    temp_q = list()
+    print("Quantum pre-processing of train Speech:")
+    
+    # x_train = x_train * (1/x_train.max())
+
+    with Pool(poolSize) as p:
+        q_train = p.map(poolNoQuanv, x_train)
+        
+    q_train = np.asarray(q_train)
+
+    if x_valid == []:
+        print("Validation array is empty! Ensure that we are running test sets!")
+        return q_train, []
+        
+    q_valid = list()
+    print("\nQuantum pre-processing of valid Speech:")
+    
+    # x_valid = x_valid * (1/x_valid.max())
+
+    with Pool(poolSize) as p:
+        q_valid = p.map(poolNoQuanv, x_valid)
+
+    q_valid = np.asarray(q_valid)
+    
+    return q_train, q_valid
+
+def gen_quanv(x_train, x_valid, kr, output, poolSize=1, quanv=True):
     print("Kernal = ", kr)
-    q_train, q_valid = gen_qspeech(x_train, x_valid, kr, poolSize)
+    # quick and dirty to check if quanv filter has any impact
+    if quanv:
+        q_train, q_valid = gen_qspeech(x_train, x_valid, kr, poolSize)
+    else:
+        q_train, q_valid = gen_speech(x_train, x_valid, kr, poolSize)
 
     np.save(f"{output}/quanv_train.npy", q_train)
 
