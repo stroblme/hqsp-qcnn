@@ -151,9 +151,10 @@ def gen_quanv(x_train, x_valid, kr, output, poolSize=1, quanv=True):
     else:
         q_train, q_valid = gen_speech(x_train, x_valid, kr, poolSize)
 
-    np.save(f"{output}/quanv_train.npy", q_train)
+    if output != None:
+        np.save(f"{output}/quanv_train.npy", q_train)
 
-    if q_valid != []:
+    if q_valid != [] and output != None:
         np.save(f"{output}/quanv_valid.npy", q_valid)
 
     return q_train, q_valid
