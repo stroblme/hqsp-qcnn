@@ -126,7 +126,7 @@ def attrnn_Model(x_in, labels, ablation = False):
 def custom_attrnn_Model(x_in, labels, ablation = True):
     # simple LSTM
     rnn_func = L.LSTM
-    use_Unet = True
+    use_Unet = False
 
     if len(x_in.shape) >= 3:
         h_feat,w_feat,ch_size = x_in.shape
@@ -139,6 +139,7 @@ def custom_attrnn_Model(x_in, labels, ablation = True):
 
     if ablation == True:
         x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(inputs)
+        x = L.Dropout(0.5)
         x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
     else:
         x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(inputs)
@@ -150,10 +151,13 @@ def custom_attrnn_Model(x_in, labels, ablation = True):
 
     if use_Unet == True:
         x = L.Conv2D(16, (5, 1), activation='relu', padding='same')(x)
+        x = L.Dropout(0.5)
         up = L.BatchNormalization()(x)
         x = L.Conv2D(32, (5, 1), activation='relu', padding='same')(up)
+        x = L.Dropout(0.5)
         x = L.BatchNormalization()(x)
         x = L.Conv2D(16, (5, 1), activation='relu', padding='same')(x)
+        x = L.Dropout(0.5)
         down = L.BatchNormalization()(x)
         merge = L.Concatenate(axis=3)([up,down])
         x = L.Conv2D(1, (5, 1), activation='relu', padding='same')(merge)
@@ -190,11 +194,11 @@ def custom_attrnn_Model(x_in, labels, ablation = True):
     model.compile(
         # optimizer=SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5),
         optimizer=Adam(
-                        learning_rate=0.001,
+                        learning_rate=0.02,
                         beta_1=0.9,
                         beta_2=0.999,
                         epsilon=1e-07,
-                        amsgrad=False,
+                        amsgrad=True,
                         name="Adam"),
         loss="categorical_crossentropy",
         metrics=["accuracy"],
