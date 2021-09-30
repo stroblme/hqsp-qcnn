@@ -79,7 +79,8 @@ def poolQuanv(img):
     return quanv(img, kernelSize)
     
 def poolNoQuanv(img):
-    return noQuanv(img, kernelSize)
+    # return noQuanv(img, kernelSize)
+    return img
 
 def gen_qspeech(x_train, x_valid, kr, poolSize=1): # kernal size = 2x2 or 3x3
     global kernelSize
