@@ -139,7 +139,6 @@ def custom_attrnn_Model(x_in, labels, ablation = False):
 
     if ablation == True:
         x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(inputs)
-        x = L.Dropout(0.5)(x)
         x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
     else:
         x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(inputs)
@@ -168,8 +167,11 @@ def custom_attrnn_Model(x_in, labels, ablation = False):
     x = L.Lambda(lambda q: K.squeeze(q, -1), name='squeeze_last_dim')(x)
 
     x = L.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = L.Dropout(0.5)(x)
     # x = L.Dropout(0.5)(x)
-    # x = L.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = L.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = L.Dropout(0.5)(x)
+
 
     xFirst = L.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
     query = L.Dense(128)(xFirst)
@@ -182,8 +184,10 @@ def custom_attrnn_Model(x_in, labels, ablation = False):
     attVector = L.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
 
     x = L.Dense(64, activation='relu')(attVector)
+    x = L.Dropout(0.5)(x)
 
     x = L.Dense(32)(x)
+    # x = L.Dropout(0.5)(x)
 
     output = L.Dense(len(labels), activation='softmax', name='output')(x)
 
