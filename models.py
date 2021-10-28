@@ -195,7 +195,7 @@ def custom_attrnn_Model(x_in, labels, ablation = False):
     model.compile(
         # optimizer=SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5),
         optimizer=Adam(
-                        learning_rate=0.001,
+                        learning_rate=0.0001,
                         beta_1=0.9,
                         beta_2=0.999,
                         epsilon=1e-07,
