@@ -39,16 +39,25 @@ def gen_train_from_wave(all_wave, all_label, output):
 
     return x_train, x_valid, y_train, y_valid
 
-def gen_train_from_wave_no_split(all_wave, all_label):
+def gen_train_from_wave_no_split(all_wave, all_label, output):
     import numpy as np
     from tensorflow import keras
 
     from sklearn.preprocessing import LabelEncoder
     from sklearn.model_selection import train_test_split
 
+    
     label_enconder = LabelEncoder()
     y = label_enconder.fit_transform(all_label)
     classes = list(label_enconder.classes_)
     y = keras.utils.to_categorical(y, num_classes=len(labels))
 
-    return np.array(all_wave), np.array(y)
+    x = np.array(all_wave)
+    y = np.array(y)
+
+    h_feat, w_feat, _ = x[0].shape
+    np.save(output + "/x_test_speech.npy", x)
+    np.save(output + "/y_test_speech.npy", y)
+    print("===== Shape", h_feat, w_feat)
+
+    return x, y
