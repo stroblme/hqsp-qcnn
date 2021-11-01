@@ -10,12 +10,7 @@ from multiprocessing import Pool
 #TODO: investigate in those hyperparameters
 n_layers = 1
 n_w = 4 # numbers of wires def 4
-noise_mode = False # for running at QPU
-
-if  noise_mode == True:
-    dev = qml.device('qiskit.aer', wires= n_w, noise_model=noise_model)
-else:
-    dev = qml.device("default.qubit", wires= n_w)
+dev = qml.device("default.qubit", wires= n_w)
 
 
 #TODO: maybe move that to the corresponding fct?
