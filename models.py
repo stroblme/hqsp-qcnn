@@ -195,7 +195,7 @@ class vqft_attrnn_model(Model):
 
     output = L.Dense(len(labels), activation='softmax', name='output')(x)
 
-    model = Model(inputs=inputs, outputs=output)
+        model = super().__init__(inputs=inputs, outputs=output)
     model.compile(
         # optimizer=SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5),
         optimizer=Adam(
