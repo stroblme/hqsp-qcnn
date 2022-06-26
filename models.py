@@ -123,7 +123,10 @@ def attrnn_Model(x_in, labels, ablation = False):
 
     return model
 
-def custom_attrnn_Model(x_in, labels, ablation = False):
+
+class vqft_attrnn_model(Model):
+    def __init__(self, x_in, labels, quantum_callback, ablation = False):
+
     # simple LSTM
     rnn_func = L.LSTM
     use_Unet = True
@@ -138,7 +141,8 @@ def custom_attrnn_Model(x_in, labels, ablation = False):
     inputs = L.Input(shape=(h_feat, w_feat, ch_size))
 
     if ablation == True:
-        x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(inputs)
+            q_inputs = VQFT(quantum_callback)(input)
+            x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(q_inputs)
         x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
     else:
         x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(inputs)
