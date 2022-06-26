@@ -211,6 +211,31 @@ class vqft_attrnn_model(Model):
 
     return model
 
+
+class VQFT(L):
+    def __init__(self, qft_callback,**kwargs):
+        self.qft_callback = qft_callback
+
+        super(Linear, self).__init__(**kwargs)
+        
+
+    def quantum_layer(self, **kwargs):
+        self.qft_callback(**kwargs)
+
+    def get_config(self):
+        config = super(Linear, self).get_config()
+        return config
+
+    def call(self, inputs):
+        
+        if(tf.executing_eagerly()):
+            final_output = []
+            for i in range(inputs.shape[0]):
+              pred = self.quantum_layer(inputs[i].numpy())
+              final_output.append(list(pred))
+            return tf.convert_to_tensor(final_output)
+        return inputs
+
 class CTCLayer(L.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
