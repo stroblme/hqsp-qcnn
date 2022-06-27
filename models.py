@@ -141,10 +141,7 @@ class vqft_attrnn_model(Model):
     inputs = L.Input(shape=(h_feat, w_feat, ch_size))
 
     if ablation == True:
-            if quantum_callback:
-                q_inputs = VQFT(quantum_callback)(inputs)
-            else:
-                q_inputs = inputs
+            q_inputs = VQFT(quantum_callback)(input)
             x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(q_inputs)
         x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
     else:
@@ -238,6 +235,13 @@ class VQFT(L):
               final_output.append(list(pred))
             return tf.convert_to_tensor(final_output)
         return inputs
+
+    def build(self, input_shape):
+        self.w = self.add_weight(
+            shape=(input_shape, input_shape), initializer="random_normal", trainable=True
+        )
+        self.b = self.add_weight(shape=(input_shape,), initializer="zeros", trainable=True)
+
 
 class CTCLayer(L.Layer):
     def __init__(self, name=None):
