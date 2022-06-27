@@ -220,7 +220,7 @@ class VQFT(L):
         
 
     def quantum_layer(self, **kwargs):
-        self.qft_callback(**kwargs)
+        self.qft_callback(self.w, self.b, **kwargs)
 
     def get_config(self):
         config = super(Linear, self).get_config()
