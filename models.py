@@ -141,7 +141,10 @@ class vqft_attrnn_model(Model):
     inputs = L.Input(shape=(h_feat, w_feat, ch_size))
 
     if ablation == True:
-            q_inputs = VQFT(quantum_callback)(input)
+            if quantum_callback:
+                q_inputs = VQFT(quantum_callback)(inputs)
+            else:
+                q_inputs = inputs
             x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(q_inputs)
         x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
     else:
