@@ -13,6 +13,7 @@ from tensorflow.keras.losses import categorical_crossentropy
 import tensorflow as tf
 
 
+
 def dense_Model(x, labels):
     """Initializes and returns a custom Keras model
     which is ready to be trained."""
@@ -124,92 +125,96 @@ def attrnn_Model(x_in, labels, ablation = False):
     return model
 
 
+
 class vqft_attrnn_model(Model):
-    def __init__(self, x_in, labels, quantum_callback, ablation = False):
+    def __init__(self, x_in, labels, quantum_callback=None, ablation = False):
 
-    # simple LSTM
-    rnn_func = L.LSTM
-    use_Unet = True
+        # simple LSTM
+        rnn_func = L.LSTM
+        use_Unet = True
 
-    if len(x_in.shape) >= 3:
-        h_feat,w_feat,ch_size = x_in.shape
-        inputs = keras.layers.Input(shape=(h_feat, w_feat, ch_size))
-    else:
-        h_feat, w_feat = x_in.shape
-        inputs = keras.layers.Input(shape=(h_feat, w_feat))
+        if len(x_in.shape) >= 3:
+            h_feat,w_feat,ch_size = x_in.shape
+            inputs = keras.layers.Input(shape=(h_feat, w_feat, ch_size))
+        else:
+            h_feat, w_feat = x_in.shape
+            inputs = keras.layers.Input(shape=(h_feat, w_feat))
 
-    inputs = L.Input(shape=(h_feat, w_feat, ch_size))
+        inputs = L.Input(shape=(h_feat, w_feat, ch_size))
 
-    if ablation == True:
-            q_inputs = VQFT(quantum_callback)(input)
+        if ablation == True:
+            if quantum_callback:
+                q_inputs = VQFT(quantum_callback)(inputs)
+            else:
+                q_inputs = inputs
             x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(q_inputs)
-        x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
-    else:
-        x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(inputs)
+            x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
+        else:
+            x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(inputs)
 
-    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
-    # we would rather have it the other way around for LSTMs
+        # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+        # we would rather have it the other way around for LSTMs
 
-    x = L.Permute((2, 1, 3))(x)
+        x = L.Permute((2, 1, 3))(x)
 
-    if use_Unet == True:
-        x = L.Conv2D(16, (5, 1), activation='relu', padding='same')(x)
-        up = L.BatchNormalization()(x)
-        x = L.Conv2D(32, (5, 1), activation='relu', padding='same')(up)
-        x = L.BatchNormalization()(x)
-        x = L.Conv2D(16, (5, 1), activation='relu', padding='same')(x)
-        down = L.BatchNormalization()(x)
-        merge = L.Concatenate(axis=3)([up,down])
-        x = L.Conv2D(1, (5, 1), activation='relu', padding='same')(merge)
-        x = L.BatchNormalization()(x)
-    else:
-        x = L.Conv2D(10, (5, 1), activation='relu', padding='same')(x)
-        x = L.BatchNormalization()(x)
-        x = L.Conv2D(1, (5, 1), activation='relu', padding='same')(x)
-        x = L.BatchNormalization()(x)
+        if use_Unet == True:
+            x = L.Conv2D(16, (5, 1), activation='relu', padding='same')(x)
+            up = L.BatchNormalization()(x)
+            x = L.Conv2D(32, (5, 1), activation='relu', padding='same')(up)
+            x = L.BatchNormalization()(x)
+            x = L.Conv2D(16, (5, 1), activation='relu', padding='same')(x)
+            down = L.BatchNormalization()(x)
+            merge = L.Concatenate(axis=3)([up,down])
+            x = L.Conv2D(1, (5, 1), activation='relu', padding='same')(merge)
+            x = L.BatchNormalization()(x)
+        else:
+            x = L.Conv2D(10, (5, 1), activation='relu', padding='same')(x)
+            x = L.BatchNormalization()(x)
+            x = L.Conv2D(1, (5, 1), activation='relu', padding='same')(x)
+            x = L.BatchNormalization()(x)
 
-    x = L.Lambda(lambda q: K.squeeze(q, -1), name='squeeze_last_dim')(x)
+        x = L.Lambda(lambda q: K.squeeze(q, -1), name='squeeze_last_dim')(x)
 
-    x = L.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-    x = L.Dropout(0.5)(x)
-    # x = L.Dropout(0.5)(x)
-    x = L.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-    x = L.Dropout(0.5)(x)
+        x = L.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+        x = L.Dropout(0.5)(x)
+        # x = L.Dropout(0.5)(x)
+        x = L.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+        x = L.Dropout(0.5)(x)
 
 
-    xFirst = L.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
-    query = L.Dense(128)(xFirst)
+        xFirst = L.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+        query = L.Dense(128)(xFirst)
 
-    # dot product attention
-    attScores = L.Dot(axes=[1, 2])([query, x])
-    attScores = L.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+        # dot product attention
+        attScores = L.Dot(axes=[1, 2])([query, x])
+        attScores = L.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
 
-    # rescale sequence
-    attVector = L.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+        # rescale sequence
+        attVector = L.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
 
-    x = L.Dense(64, activation='relu')(attVector)
-    x = L.Dropout(0.5)(x)
+        x = L.Dense(64, activation='relu')(attVector)
+        x = L.Dropout(0.5)(x)
 
-    x = L.Dense(32)(x)
-    # x = L.Dropout(0.5)(x)
+        x = L.Dense(32)(x)
+        # x = L.Dropout(0.5)(x)
 
-    output = L.Dense(len(labels), activation='softmax', name='output')(x)
+        output = L.Dense(len(labels), activation='softmax', name='output')(x)
 
         model = super().__init__(inputs=inputs, outputs=output)
-    model.compile(
-        # optimizer=SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5),
-        optimizer=Adam(
-                        learning_rate=0.0001,
-                        beta_1=0.9,
-                        beta_2=0.999,
-                        epsilon=1e-07,
-                        amsgrad=True,
-                        name="Adam"),
-        loss="categorical_crossentropy",
-        metrics=["accuracy"],
-    )
+        model.compile(
+            # optimizer=SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5),
+            optimizer=Adam(
+                            learning_rate=0.0001,
+                            beta_1=0.9,
+                            beta_2=0.999,
+                            epsilon=1e-07,
+                            amsgrad=True,
+                            name="Adam"),
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
+        )
 
-    return model
+        return model
 
 
 class VQFT(L):
@@ -218,7 +223,6 @@ class VQFT(L):
 
         super(Linear, self).__init__(**kwargs)
         
-
     def quantum_layer(self, **kwargs):
         self.qft_callback(self.w, self.b, **kwargs)
 
