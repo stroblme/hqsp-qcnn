@@ -137,8 +137,9 @@ class vqft_attrnn_model(Model):
             assert(len(x_in.shape) == 1)
         elif len(x_in.shape) >= 3:
             h_feat,w_feat,ch_size = x_in.shape
-            inputs = keras.layers.Input(shape=(h_feat, w_feat, ch_size))
+            inputs = keras.layers.Input(shape=(h_feat, w_feat, ch_size)) # ch_size will always be 1
         else:
+            # TODO: check if can actually run in this case
             h_feat, w_feat = x_in.shape
             inputs = keras.layers.Input(shape=(h_feat, w_feat))
 
@@ -146,7 +147,7 @@ class vqft_attrnn_model(Model):
         if ablation == True:
             if quantum_callback:
                 q_in = VQFT(quantum_callback)(x_in)
-                h_feat, w_feat = q_in.shape #TODO: check why we get ch_size in the first case
+                h_feat, w_feat = q_in.shape
                 inputs = keras.layers.Input(shape=(h_feat, w_feat, 1))
 
             x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(inputs)
