@@ -7,7 +7,7 @@ from tensorflow.keras.optimizers import RMSprop, SGD
 from tensorflow.keras import layers as L
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Linear, Lambda, BatchNormalization, Conv1D, GRU, TimeDistributed, Activation, Dense, Flatten
+from tensorflow.keras.layers import Input, Lambda, BatchNormalization, Conv1D, GRU, TimeDistributed, Activation, Dense, Flatten
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.losses import categorical_crossentropy
 import tensorflow as tf
@@ -133,21 +133,23 @@ class vqft_attrnn_model(Model):
         rnn_func = L.LSTM
         use_Unet = True
 
-        if len(x_in.shape) >= 3:
+        if quantum_callback:
+            assert(len(x_in.shape) == 1)
+        elif len(x_in.shape) >= 3:
             h_feat,w_feat,ch_size = x_in.shape
             inputs = keras.layers.Input(shape=(h_feat, w_feat, ch_size))
         else:
             h_feat, w_feat = x_in.shape
             inputs = keras.layers.Input(shape=(h_feat, w_feat))
 
-        inputs = L.Input(shape=(h_feat, w_feat, ch_size))
 
         if ablation == True:
             if quantum_callback:
-                q_inputs = VQFT(quantum_callback)(inputs)
-            else:
-                q_inputs = inputs
-            x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(q_inputs)
+                q_in = VQFT(quantum_callback)(x_in)
+                h_feat,w_feat,ch_size = q_in.shape
+                inputs = keras.layers.Input(shape=(h_feat, w_feat, ch_size))
+
+            x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(inputs)
             x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
         else:
             x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(inputs)
@@ -200,7 +202,7 @@ class vqft_attrnn_model(Model):
 
         output = L.Dense(len(labels), activation='softmax', name='output')(x)
 
-        model = super().__init__(inputs=inputs, outputs=output)
+        model = super(vqft_attrnn_model, self).__init__(inputs=inputs, outputs=output)
         model.compile(
             # optimizer=SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5),
             optimizer=Adam(
@@ -217,34 +219,34 @@ class vqft_attrnn_model(Model):
         return model
 
 
-class VQFT(L):
+class VQFT(L.Layer):
     def __init__(self, qft_callback,**kwargs):
         self.qft_callback = qft_callback
 
-        super(Linear, self).__init__(**kwargs)
+        super(VQFT, self).__init__(**kwargs)
         
-    def quantum_layer(self, **kwargs):
-        self.qft_callback(self.w, self.b, **kwargs)
+    def quantum_layer(self, x, **kwargs):
+        self.qft_callback(weights=self.w, biases=self.b, x=x, **kwargs)
 
     def get_config(self):
-        config = super(Linear, self).get_config()
+        config = super(VQFT, self).get_config()
         return config
 
     def call(self, inputs):
         
         if(tf.executing_eagerly()):
             final_output = []
-            for i in range(inputs.shape[0]):
-              pred = self.quantum_layer(inputs[i].numpy())
-              final_output.append(list(pred))
-            return tf.convert_to_tensor(final_output)
+            pred = self.quantum_layer(x=inputs) # note that inputs is a signal type here
+            return tf.convert_to_tensor(pred)
         return inputs
 
     def build(self, input_shape):
+        s = int(list(input_shape)[0])
+
         self.w = self.add_weight(
-            shape=(input_shape, input_shape), initializer="random_normal", trainable=True
+            shape=(s,), initializer="random_normal", trainable=True
         )
-        self.b = self.add_weight(shape=(input_shape,), initializer="zeros", trainable=True)
+        self.b = self.add_weight(shape=(s,), initializer="zeros", trainable=True)
 
 
 class CTCLayer(L.Layer):
