@@ -126,8 +126,7 @@ def attrnn_Model(x_in, labels, ablation = False):
 
 
 
-class vqft_attrnn_model(Model):
-    def __init__(self, x_in, labels, quantum_callback=None, ablation = False):
+def vqft_attrnn_model(x_in, labels, quantum_callback=None, ablation = False):
 
         # simple LSTM
         rnn_func = L.LSTM
