@@ -223,8 +223,9 @@ class vqft_attrnn_model(Model):
 
 
 class VQFT(L.Layer):
-    def __init__(self, qft_callback,**kwargs):
+    def __init__(self, qft_callback, output_shape, **kwargs):
         self.qft_callback = qft_callback
+        self._output_shape = output_shape
 
         super(VQFT, self).__init__(**kwargs)
         
