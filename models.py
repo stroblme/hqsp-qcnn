@@ -236,12 +236,17 @@ class VQFT(L.Layer):
         return config
 
     def call(self, inputs):
+        output = []
+        bs = inputs.shape[0] if inputs.shape[0] is not None else 1
+        for batch in range(bs):
         
         if(tf.executing_eagerly()):
-            final_output = []
-            pred = self.quantum_layer(x=inputs) # note that inputs is a signal type here
-            return tf.convert_to_tensor(pred)
-        return inputs
+                pred = self.quantum_layer(x=inputs[batch]) # note that inputs is a signal type here
+                output.append(tf.convert_to_tensor(pred))
+            else:
+                output.append(inputs[batch])
+
+        return tf.convert_to_tensor(output)
 
     def build(self, input_shape):
         s = int(list(input_shape)[0])
