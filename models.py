@@ -216,6 +216,7 @@ class vqft_attrnn_model(Model):
                             name="Adam"),
             loss="categorical_crossentropy",
             metrics=["accuracy"],
+        run_eagerly=True
         )
 
         return model
