@@ -250,13 +250,14 @@ class VQFT(L.Layer):
 
     def compute_output_shape(self, input_shape): return self._output_shape
     def build(self, input_shape):
-        s = int(list(input_shape)[0])
+        s = int(input_shape[1])
 
         self.w = self.add_weight(
             shape=(s,), initializer="random_normal", trainable=True
         )
         self.b = self.add_weight(shape=(s,), initializer="zeros", trainable=True)
 
+        super(VQFT, self).build(input_shape)
 
 class CTCLayer(L.Layer):
     def __init__(self, name=None):
