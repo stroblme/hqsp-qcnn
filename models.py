@@ -146,11 +146,12 @@ class vqft_attrnn_model(Model):
 
         if ablation == True:
             if quantum_callback:
-                q_in = VQFT(quantum_callback)(x_in)
-                h_feat, w_feat = q_in.shape
-                inputs = keras.layers.Input(shape=(h_feat, w_feat, 1))
+            w_feat = x_in.shape[0]
+            inputs = keras.layers.Input(shape=(w_feat, 1, 1))
+            x = VQFT(quantum_callback, (60, 24))(inputs)
+            # h_feat, w_feat = x.shape
 
-            x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(inputs)
+        x = L.Conv2D(4, (1, 1), strides=(2, 2), activation='relu', padding='same', name='abla_conv')(x)
             x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(x)
         else:
             x = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(inputs)
