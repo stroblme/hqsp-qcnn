@@ -248,6 +248,7 @@ class VQFT(L.Layer):
 
         return tf.convert_to_tensor(output)
 
+    def compute_output_shape(self, input_shape): return self._output_shape
     def build(self, input_shape):
         s = int(list(input_shape)[0])
 
