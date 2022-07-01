@@ -237,17 +237,9 @@ def vqft_attrnn_model(x_in, labels, nQubits, quantum_callback=None, ablation = F
 #        return K.dot(input_data, self.kernel) 
 #    def compute_output_shape(self, input_shape): return (input_shape[0], self.output_dim)
 
-
-def call_no_batch(c, x, w=None, b=None, bI=None, nM=None, fRC=None):
-
-    if(tf.executing_eagerly()):
-        pred = c(weights=w, biases=b, x=x, backendInstance=bI, noiseModel=nM, filterResultCounts=fRC) # note that inputs is a signal type here
-        print("Finished quantum exec")
-        return tf.convert_to_tensor(pred)
-    else:
-        print(f"Converting dummy input of shape {x.shape}")
-        # return x
-        return tf.reshape(tf.matmul(tf.matmul(x, tf.ones((16384,1, 60))), tf.ones((60, 1, 60, 127))), (16384, 1, 60, 127, 1))[0]
+def poolProcess(c_x_w_b_bI_nM_fRC:list):
+    wave = call_no_batch(*c_x_w_b_bI_nM_fRC)
+    return wave
 
 class VQFT(L.Layer):
     def __init__(self, qft_callback, nQubits, output_shape, **kwargs):
