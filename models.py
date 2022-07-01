@@ -263,41 +263,30 @@ class VQFT(L.Layer):
     def call(self, input_data):
         bs = input_data.shape[0] if input_data.shape[0] is not None else 1
 
-        if tf.executing_eagerly():
-            print(f"\nRunning qft with additional parameters:\n\t weights: {self.w.numpy()}\n\t biases: {self.b.numpy()}\n")
+        if bs==1:
+            return self.call_no_batch(input_data)
         else:
-            print(f"Dummy call from tf to get parameters")
-            return call_no_batch(self.qgen_callback, input_data) 
-
-        bs = input_data.shape[0]
-
-        input_data_np = np.array(input_data)
-        runs_wo_rest = int(bs/self.pool_size)
-        result = []
-        for part in range(1, runs_wo_rest+1):
-            print(f"\nRun {part} of {runs_wo_rest}\n")
+        if rest!=0:
+            
             output = []
-            with Pool(self.pool_size) as p:
-                # pack everythin so that we have something like
-                # [batch_size][3]
-                # where in [3], the input data, weights and biases are hidden
+            print(f"\nRuning leftover with size {rest} to fit batch size {bs}\n")
+
+            with Pool(rest) as p:
                 output = p.map(poolProcess, list(zip(
-                                                [self.qgen_callback]*self.pool_size,
-                                                input_data_np[(part-1)*self.pool_size:part*self.pool_size],
-                                                [self.w.numpy()]*self.pool_size,
-                                                [self.b.numpy()]*self.pool_size,
-                                                [self.backendInstance]*self.pool_size,
-                                                [self.noiseModel]*self.pool_size,
-                                                [self.filterResultCounts]*self.pool_size)))
+                                                        [self.qgen_callback]*rest,
+                                                        input_data_np[bs-rest:bs],
+                                                        [self.w.numpy()]*rest,
+                                                        [self.b.numpy()]*rest,
+                                                        [self.backendInstance]*rest,
+                                                        [self.noiseModel]*rest,
+                                                        [self.filterResultCounts]*rest)))
 
-            print(f"\n\nPool process finished, concatinating output\n\n")
+            print(f"Pool process of rest finished, concatinating output")
             result += output.copy()
-        rest = bs%self.pool_size
-            output = []
-            with Pool(bs) as p:
-                output = p.map(self.call_no_batch, input_data)
-
-            return tf.convert_to_tensor(output)
+        else:
+            print(f"No rest, layer call finished.")
+        result = tf.reshape(tf.convert_to_tensor(result), (bs, 60, 127, 1))
+        return result
 
     def compute_output_shape(self, input_shape):
         return [input_shape[0], self._output_shape]
