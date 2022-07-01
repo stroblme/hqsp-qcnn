@@ -266,30 +266,14 @@ class VQFT(L.Layer):
         if bs==1:
             return self.call_no_batch(input_data)
         else:
-        if rest!=0:
-            
             output = []
-            print(f"\nRuning leftover with size {rest} to fit batch size {bs}\n")
+            with Pool(bs) as p:
+                output = p.map(self.call_no_batch, input_data)
 
-            with Pool(rest) as p:
-                output = p.map(poolProcess, list(zip(
-                                                        [self.qgen_callback]*rest,
-                                                        input_data_np[bs-rest:bs],
-                                                        [self.w.numpy()]*rest,
-                                                        [self.b.numpy()]*rest,
-                                                        [self.backendInstance]*rest,
-                                                        [self.noiseModel]*rest,
-                                                        [self.filterResultCounts]*rest)))
-
-            print(f"Pool process of rest finished, concatinating output")
-            result += output.copy()
-        else:
-            print(f"No rest, layer call finished.")
-        result = tf.reshape(tf.convert_to_tensor(result), (bs, 60, 127, 1))
-        return result
+            return tf.convert_to_tensor(output)
 
     def compute_output_shape(self, input_shape):
-        return [input_shape[0], self._output_shape]
+        return [None, 60, 127, 1]
     
     def build(self, input_shape):
         s = self.nQubits
