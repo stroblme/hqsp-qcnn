@@ -237,16 +237,17 @@ def vqft_attrnn_model(x_in, labels, nQubits, quantum_callback=None, ablation = F
 #        return K.dot(input_data, self.kernel) 
 #    def compute_output_shape(self, input_shape): return (input_shape[0], self.output_dim)
 
-def poolProcess(c_x_w_b_bI_nM_fRC:list):
-    wave = call_no_batch(*c_x_w_b_bI_nM_fRC)
-    return wave
-
 class VQFT(L.Layer):
-    def __init__(self, qft_callback, nQubits, output_shape, **kwargs):
-        self.qft_callback = qft_callback
+    def __init__(self, qinit_callback, qgen_callback, nQubits, output_shape, **kwargs):
+        self.qinit_callback = qinit_callback
+        self.qgen_callback = qgen_callback
         self._output_shape = output_shape
         self.nQubits = nQubits
         self.output_dim = 60
+        self.pool_size = 12
+
+        print(f"Running Circuit initialization from VQFT layer")
+        self.backendInstance, self.noiseModel, self.filterResultCounts = self.qinit_callback()
         super(VQFT, self).__init__(**kwargs)
 
         
