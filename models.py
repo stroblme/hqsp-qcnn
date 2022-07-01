@@ -253,19 +253,46 @@ class VQFT(L.Layer):
         config = super(VQFT, self).get_config()
         return config
 
-    def _compute_gradients(tensor, var_list):
-        print("Gradient computation called")
-        grads = tf.gradients(tensor, var_list)
-        return [grad if grad is not None else tf.zeros_like(var)
-            for var, grad in zip(var_list, grads)]
-
+    def call_no_batch(self, inputs):
+        if(tf.executing_eagerly()):
+            pred = self.quantum_layer(x=inputs) # note that inputs is a signal type here
+            return tf.convert_to_tensor(pred)
+        else:
+            return tf.reshape(inputs, [None, *self._output_shape])
 
     def call(self, input_data):
         bs = input_data.shape[0] if input_data.shape[0] is not None else 1
 
-        if bs==1:
-            return self.call_no_batch(input_data)
+        if tf.executing_eagerly():
+            print(f"\nRunning qft with additional parameters:\n\t weights: {self.w.numpy()}\n\t biases: {self.b.numpy()}\n")
         else:
+            print(f"Dummy call from tf to get parameters")
+            return call_no_batch(self.qgen_callback, input_data) 
+
+        bs = input_data.shape[0]
+
+        input_data_np = np.array(input_data)
+        runs_wo_rest = int(bs/self.pool_size)
+        result = []
+        for part in range(1, runs_wo_rest+1):
+            print(f"\nRun {part} of {runs_wo_rest}\n")
+            output = []
+            with Pool(self.pool_size) as p:
+                # pack everythin so that we have something like
+                # [batch_size][3]
+                # where in [3], the input data, weights and biases are hidden
+                output = p.map(poolProcess, list(zip(
+                                                [self.qgen_callback]*self.pool_size,
+                                                input_data_np[(part-1)*self.pool_size:part*self.pool_size],
+                                                [self.w.numpy()]*self.pool_size,
+                                                [self.b.numpy()]*self.pool_size,
+                                                [self.backendInstance]*self.pool_size,
+                                                [self.noiseModel]*self.pool_size,
+                                                [self.filterResultCounts]*self.pool_size)))
+
+            print(f"\n\nPool process finished, concatinating output\n\n")
+            result += output.copy()
+        rest = bs%self.pool_size
             output = []
             with Pool(bs) as p:
                 output = p.map(self.call_no_batch, input_data)
