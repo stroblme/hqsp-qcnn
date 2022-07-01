@@ -133,7 +133,7 @@ def vqft_attrnn_model(x_in, labels, nQubits, quantum_callback=None, ablation = F
     rnn_func = L.LSTM
     use_Unet = True
 
-    if qgen_callback:
+    if quantum_callback:
         assert(len(x_in.shape) == 1)
     elif len(x_in.shape) >= 3:
         h_feat,w_feat,ch_size = x_in.shape
@@ -236,6 +236,18 @@ def vqft_attrnn_model(x_in, labels, nQubits, quantum_callback=None, ablation = F
 #        print(tf.executing_eagerly())
 #        return K.dot(input_data, self.kernel) 
 #    def compute_output_shape(self, input_shape): return (input_shape[0], self.output_dim)
+
+
+def call_no_batch(c, x, w=None, b=None, bI=None, nM=None, fRC=None):
+
+    if(tf.executing_eagerly()):
+        pred = c(weights=w, biases=b, x=x, backendInstance=bI, noiseModel=nM, filterResultCounts=fRC) # note that inputs is a signal type here
+        print("Finished quantum exec")
+        return tf.convert_to_tensor(pred)
+    else:
+        print(f"Converting dummy input of shape {x.shape}")
+        # return x
+        return tf.reshape(tf.matmul(tf.matmul(x, tf.ones((16384,1, 60))), tf.ones((60, 1, 60, 127))), (16384, 1, 60, 127, 1))[0]
 
 class VQFT(L.Layer):
     def __init__(self, qft_callback, nQubits, output_shape, **kwargs):
