@@ -133,7 +133,7 @@ def vqft_attrnn_model(x_in, labels, nQubits, quantum_callback=None, ablation = F
     rnn_func = L.LSTM
     use_Unet = True
 
-    if quantum_callback:
+    if qgen_callback:
         assert(len(x_in.shape) == 1)
     elif len(x_in.shape) >= 3:
         h_feat,w_feat,ch_size = x_in.shape
@@ -148,9 +148,8 @@ def vqft_attrnn_model(x_in, labels, nQubits, quantum_callback=None, ablation = F
         if quantum_callback:
             w_feat = x_in.shape[0]
             inputs = keras.layers.Input(shape=(w_feat, 1, 1))
-            input_q = keras.layers.Input(shape=(60, 127))
             assert tf.executing_eagerly() == True
-            x = VQFT(qinit_callback, qgen_callback, nQubits, input_q)(inputs)
+            x = VQFT(quantum_callback, nQubits, (60, 127))(inputs)
             # x = MyCustomLayer(60)(inputs)
             # x = L.Reshape((1, x.shape[0], x.shape[1], x.shape[2], 1))(x)
             # h_feat, w_feat = x.shape
