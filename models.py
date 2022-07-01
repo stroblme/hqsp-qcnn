@@ -238,16 +238,11 @@ def vqft_attrnn_model(x_in, labels, nQubits, quantum_callback=None, ablation = F
 #    def compute_output_shape(self, input_shape): return (input_shape[0], self.output_dim)
 
 class VQFT(L.Layer):
-    def __init__(self, qinit_callback, qgen_callback, nQubits, output_shape, **kwargs):
-        self.qinit_callback = qinit_callback
-        self.qgen_callback = qgen_callback
+    def __init__(self, qft_callback, nQubits, output_shape, **kwargs):
+        self.qft_callback = qft_callback
         self._output_shape = output_shape
         self.nQubits = nQubits
         self.output_dim = 60
-        self.pool_size = 12
-
-        print(f"Running Circuit initialization from VQFT layer")
-        self.backendInstance, self.noiseModel, self.filterResultCounts = self.qinit_callback()
         super(VQFT, self).__init__(**kwargs)
 
         
@@ -258,12 +253,12 @@ class VQFT(L.Layer):
         config = super(VQFT, self).get_config()
         return config
 
-    def call_no_batch(self, inputs):
-        if(tf.executing_eagerly()):
-            pred = self.quantum_layer(x=inputs) # note that inputs is a signal type here
-            return tf.convert_to_tensor(pred)
-        else:
-            return tf.reshape(inputs, [None, *self._output_shape])
+    def _compute_gradients(tensor, var_list):
+        print("Gradient computation called")
+        grads = tf.gradients(tensor, var_list)
+        return [grad if grad is not None else tf.zeros_like(var)
+            for var, grad in zip(var_list, grads)]
+
 
     def call(self, input_data):
         bs = input_data.shape[0] if input_data.shape[0] is not None else 1
