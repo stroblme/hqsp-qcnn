@@ -127,7 +127,7 @@ def dense_Model(x, labels):
 
 
 
-def vqft_attrnn_model(x_in, labels, nQubits, qinit_callback=None, qgen_callback=None, ablation = False):
+def vqft_attrnn_model(x_in, labels, nQubits, quantum_callback=None, ablation = False):
 
     # simple LSTM
     rnn_func = L.LSTM
@@ -148,8 +148,9 @@ def vqft_attrnn_model(x_in, labels, nQubits, qinit_callback=None, qgen_callback=
         if quantum_callback:
             w_feat = x_in.shape[0]
             inputs = keras.layers.Input(shape=(w_feat, 1, 1))
+            input_q = keras.layers.Input(shape=(60, 127))
             assert tf.executing_eagerly() == True
-            x = VQFT(quantum_callback, nQubits, (60, 127))(inputs)
+            x = VQFT(qinit_callback, qgen_callback, nQubits, input_q)(inputs)
             # x = MyCustomLayer(60)(inputs)
             # x = L.Reshape((1, x.shape[0], x.shape[1], x.shape[2], 1))(x)
             # h_feat, w_feat = x.shape
