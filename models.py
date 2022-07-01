@@ -273,15 +273,15 @@ class VQFT(L.Layer):
             return tf.convert_to_tensor(output)
 
     def compute_output_shape(self, input_shape):
-        return [None, 60, 127, 1]
+        return [input_shape[0], self._output_shape]
     
     def build(self, input_shape):
         s = self.nQubits
 
         self.w = self.add_weight(
-            shape=(s,), initializer="random_normal", trainable=True
+            shape=(s,), initializer="random_normal", trainable=True, name='vqft_weights'
         )
-        self.b = self.add_weight(shape=(s,), initializer="zeros", trainable=True)
+        self.b = self.add_weight(shape=(s,), initializer="zeros", trainable=True, name='vqft_biases')
 
         super(VQFT, self).build(input_shape)
 
